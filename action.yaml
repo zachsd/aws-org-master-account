@@ -1,0 +1,74 @@
+name: aws-org-master-account
+description: Get AWS Organization Master Account details
+branding:
+  icon: shield
+  color: orange
+author: "Zachary Davis"
+
+outputs:
+  master_account_id:
+    description: AWS Master Account ID
+    value: ${{ steps.get_master_account.outputs.master_account }}
+  master_account_email:
+    description: AWS Master Account Email
+    value: ${{ steps.get_master_account.outputs.master_account_email }}
+  master_account_arn:
+    description: AWS Master Account ARN
+    value: ${{ steps.get_master_account.outputs.master_account_arn }}
+  master_account_name:
+    description: AWS Master Account Name
+    value: ${{ steps.get_master_account.outputs.master_account_name }}
+  organization_id:
+    description: AWS Organization ID
+    value: ${{ steps.get_master_account.outputs.organization_id }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get Master Account details
+      shell: bash
+      id: master_account_details
+      run: |-
+        # Get the master account ID for the AWS Organization
+        aws_org=$(aws organizations describe-organization --output json)
+        echo "master_account_details=$master_account_details" >>$GITHUB_OUTPUT
+
+    - name: Get AWS Organization ID
+      shell: bash
+      id: organization_id
+      run: |-
+        # Get the master account ID
+        organization_id=$(echo ${{ steps.master_account_details.outputs.master_account_details }} | jq '.Organization.Id' --raw-output)
+        echo "organization_id=$organization_id" >>$GITHUB_OUTPUT
+
+    - name: Get Master Account ID
+      shell: bash
+      id: master_account_id
+      run: |-
+        # Get the master account ID
+        master_account_id=$(echo ${{ steps.master_account_details.outputs.master_account_details }} | jq '.Organization.MasterAccountId' --raw-output)
+        echo "master_account_id=$master_account_id" >>$GITHUB_OUTPUT
+
+    - name: Get Master Account Email
+      shell: bash
+      id: master_account_email
+      run: |-
+        # Get the master account email
+        master_account_email=$(echo ${{ steps.master_account_details.outputs.master_account_details }} | jq '.Organization.MasterAccountEmail' --raw-output)
+        echo "master_account_email=$master_account_email" >>$GITHUB_OUTPUT
+
+    - name: Get Master Account ARN
+      shell: bash
+      id: master_account_arn
+      run: |-
+        # Get the master account ARN
+        master_account_arn=$(echo ${{ steps.master_account_details.outputs.master_account_details }} | jq '.Organization.MasterAccountArn' --raw-output)
+        echo "master_account_arn=$master_account_arn" >>$GITHUB_OUTPUT
+
+    - name: Get Master Account Name
+      shell: bash
+      id: master_account_name
+      run: |-
+        # Get the master account name
+        master_account_name=$(aws organizations list-accounts | jq --raw-output ".Accounts[] | select(.Id == \"$master_account_id\") | .Name")
+        echo "master_account_name=$master_account_name" >>$GITHUB_OUTPUT
